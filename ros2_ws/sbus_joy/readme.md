@@ -22,6 +22,8 @@ colcon build --packages-select sbus_joy --cmake-clean-cache
 ```bash
 source /opt/ros/humble/setup.bash
 source ros2_ws/install/setup.bash
+export ROS_LOG_DIR=/root/.ros/log
+
 ros2 run sbus_joy sbus_joy_node --ros-args -p serial_port:=/dev/ttyACM1
 ```
 
@@ -37,9 +39,8 @@ ros2 run sbus_joy sbus_joy_node --ros-args -p serial_port:=/dev/ttyACM1
 ```bash
 source /opt/ros/humble/setup.bash
 source ros2_ws/install/setup.bash
+export ROS_LOG_DIR=/root/.ros/log
 ros2 topic echo /joy
 ```
 
-## 文档
 
-协议文档见 `docs/` 目录。

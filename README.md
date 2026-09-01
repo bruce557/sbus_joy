@@ -67,6 +67,7 @@ ros2_ws/install/sbus_joy/lib/sbus_joy/sbus_joy_node
 # 加载环境
 source /opt/ros/humble/setup.bash
 source ~/ros2_ws/install/setup.bash
+export ROS_LOG_DIR=/root/.ros/log
 
 # 启动节点（默认串口 /dev/ttyACM1，默认频率 50Hz）
 ros2 run sbus_joy sbus_joy_node
@@ -102,6 +103,8 @@ ros2 param set /sbus_joy_node publish_rate_hz 50
 ```bash
 source /opt/ros/humble/setup.bash
 source ~/ros2_ws/install/setup.bash
+export ROS_LOG_DIR=/root/.ros/log
+
 ros2 topic echo /joy
 ```
 

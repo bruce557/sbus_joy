@@ -49,7 +49,7 @@ public:
 
         // 打开串口
         if (!open_serial()) {
-            RCLCPP_ERROR(this->get_logger(), "串口打开失败，退出");
+            RCLCPP_ERROR(this->get_logger(), "Failed to open serial port, exiting");
             rclcpp::shutdown();
             return;
         }
@@ -62,7 +62,7 @@ public:
         );
 
         RCLCPP_INFO(this->get_logger(),
-            "SBUS Joy 节点启动，串口: %s, 发布频率: %d Hz",
+            "SBUS Joy node started, port: %s, rate: %d Hz",
             serial_port_.c_str(), rate);
     }
 
@@ -78,7 +78,7 @@ private:
     {
         fd_ = open(serial_port_.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
         if (fd_ < 0) {
-            RCLCPP_ERROR(this->get_logger(), "打开串口 %s 失败: %s",
+            RCLCPP_ERROR(this->get_logger(), "Failed to open serial port %s: %s",
                 serial_port_.c_str(), std::strerror(errno));
             return false;
         }
@@ -93,7 +93,7 @@ private:
         uint8_t dummy[256];
         while (read(fd_, dummy, sizeof(dummy)) > 0) {}
 
-        RCLCPP_INFO(this->get_logger(), "串口 %s 打开成功", serial_port_.c_str());
+        RCLCPP_INFO(this->get_logger(), "Serial port %s opened", serial_port_.c_str());
         return true;
     }
 
@@ -127,7 +127,7 @@ private:
         joy_pub_->publish(joy_msg);
 
         RCLCPP_DEBUG(this->get_logger(),
-            "发布 Joy: axes[0]=%.2f, axes[1]=%.2f, buttons[0]=%d, buttons[1]=%d",
+            "Published Joy: axes[0]=%.2f, axes[1]=%.2f, buttons[0]=%d, buttons[1]=%d",
             joy_msg.axes[0], joy_msg.axes[1], joy_msg.buttons[0], joy_msg.buttons[1]);
     }
 
@@ -148,7 +148,7 @@ private:
                     timeout_count++;
                     continue;
                 }
-                RCLCPP_ERROR(this->get_logger(), "读取错误: %s", std::strerror(errno));
+                RCLCPP_ERROR(this->get_logger(), "Read error: %s", std::strerror(errno));
                 return false;
             }
 
@@ -202,7 +202,7 @@ private:
         }
 
         if (timeout_count >= MAX_TIMEOUT) {
-            RCLCPP_WARN(this->get_logger(), "读取 SBUS 帧超时");
+            RCLCPP_WARN(this->get_logger(), "SBUS frame read timeout");
         }
 
         return false;

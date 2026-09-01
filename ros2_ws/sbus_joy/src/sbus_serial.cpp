@@ -20,11 +20,11 @@ int configure_serial(int fd)
     struct termios2 tty{};
     int ret = ioctl(fd, TCGETS2, &tty);
     if (ret != 0) {
-        std::perror("[sbus] TCGETS2 失败");
+        std::perror("[sbus] TCGETS2 failed");
         return -1;
     }
 
-    std::printf("[sbus] termios2 获取成功\n");
+    std::printf("[sbus] termios2 acquired\n");
 
     // 清除旧配置
     tty.c_cflag &= ~(CBAUD | CSIZE | PARENB | PARODD | CSTOPB | CRTSCTS | HUPCL);
@@ -53,13 +53,13 @@ int configure_serial(int fd)
 
     ret = ioctl(fd, TCSETS2, &tty);
     if (ret != 0) {
-        std::perror("[sbus] TCSETS2 失败");
+        std::perror("[sbus] TCSETS2 failed");
         return -1;
     }
 
     ioctl(fd, TCFLSH, TCIOFLUSH);
 
-    std::printf("[sbus] 串口配置成功: 115200, 8N1\n");
+    std::printf("[sbus] Serial configured: 115200, 8N1\n");
     return 0;
 }
 
@@ -103,17 +103,17 @@ void print_data(const SbusData& data)
     static int frame_count = 0;
     frame_count++;
 
-    std::printf("\r[帧 #%04d] ", frame_count);
+    std::printf("\r[Frame #%04d] ", frame_count);
     for (int i = 0; i < CHANNEL_COUNT; i++) {
         std::printf("CH%02d=%4d ", i + 1, data.channels[i]);
     }
-    std::printf("| 丢失:%d 故障:%d  ", data.frame_lost, data.failsafe);
+    std::printf("| lost:%d failsafe:%d  ", data.frame_lost, data.failsafe);
     std::fflush(stdout);
 }
 
 void print_raw(const uint8_t* frame, int len)
 {
-    std::printf("原始数据: ");
+    std::printf("Raw data: ");
     for (int i = 0; i < len && i < 50; i++) {
         std::printf("%02X ", frame[i]);
     }
