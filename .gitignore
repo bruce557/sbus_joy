@@ -1,0 +1,20 @@
+# ROS2 构建产物
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+
+# 编译产物
+*.o
+*.a
+*.so
+*.out
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
