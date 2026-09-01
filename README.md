@@ -14,6 +14,8 @@ Controller/
 │   └── sbus_joy/              # ROS2 功能包
 │       ├── include/
 │       │   └── sbus_serial.hpp    # SBUS 协议 C++ 头文件
+│       ├── launch/
+│       │   └── sbus_joy.launch.py # ROS2 launch 启动文件
 │       ├── src/
 │       │   ├── sbus_serial.cpp    # SBUS 串口配置与帧解析
 │       │   └── sbus_joy_node.cpp  # ROS2 节点主程序
@@ -62,6 +64,29 @@ ros2_ws/install/sbus_joy/lib/sbus_joy/sbus_joy_node
 ---
 
 ## 运行
+
+### 方式一：使用 launch（推荐）
+
+```bash
+# 加载环境
+source /opt/ros/humble/setup.bash
+source ~/ros2_ws/install/setup.bash
+export ROS_LOG_DIR=/root/.ros/log
+
+# 默认参数启动（串口 /dev/ttyACM1，频率 50Hz）
+ros2 launch sbus_joy sbus_joy.launch.py
+
+# 指定串口
+ros2 launch sbus_joy sbus_joy.launch.py serial_port:=/dev/ttyACM0
+
+# 指定发布频率
+ros2 launch sbus_joy sbus_joy.launch.py publish_rate_hz:=100
+
+# 同时指定多个参数
+ros2 launch sbus_joy sbus_joy.launch.py serial_port:=/dev/ttyACM0 publish_rate_hz:=100
+```
+
+### 方式二：使用 ros2 run
 
 ```bash
 # 加载环境
