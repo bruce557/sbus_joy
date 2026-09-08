@@ -12,20 +12,27 @@
 Controller/
 ├── ros2_ws/
 │   └── sbus_joy/              # ROS2 功能包
-│       ├── include/
-│       │   ├── sbus_serial.hpp    # SBUS 协议 C++ 头文件
-│       │   └── joy_controller.hpp # 遥控器控制器接口
+│       ├── common/            # 公共模块（SBUS 底层驱动）
+│       │   ├── include/
+│       │   │   └── sbus_serial.hpp    # SBUS 协议 C++ 头文件
+│       │   └── src/
+│       │       └── sbus_serial.cpp    # SBUS 串口配置与帧解析
+│       ├── cpp/               # C++ 接口（无 ROS2 依赖）
+│       │   ├── include/
+│       │   │   └── joy_controller.hpp # 遥控器控制器接口
+│       │   └── src/
+│       │       └── joy_controller.cpp # 遥控器控制器实现
+│       ├── ros2/              # ROS2 接口
+│       │   └── src/
+│       │       └── sbus_joy_node.cpp  # ROS2 节点主程序
+│       ├── test/              # 测试程序
+│       │   └── test_joy_controller.cpp # 独立测试（无 ROS2 依赖）
 │       ├── launch/
-│       │   └── sbus_joy.launch.py # ROS2 launch 启动文件
+│       │   └── sbus_joy.launch.py     # ROS2 launch 启动文件
 │       ├── service/
-│       │   ├── sbus_joy.service   # systemd 服务文件
+│       │   ├── sbus_joy.service       # systemd 服务文件
 │       │   ├── install_autostart.sh   # 安装自启动脚本
 │       │   └── uninstall_autostart.sh # 卸载自启动脚本
-│       ├── src/
-│       │   ├── sbus_serial.cpp        # SBUS 串口配置与帧解析
-│       │   ├── sbus_joy_node.cpp      # ROS2 节点主程序
-│       │   ├── joy_controller.cpp     # 遥控器控制器实现
-│       │   └── test_joy_controller.cpp # 独立测试程序
 │       ├── CMakeLists.txt
 │       └── package.xml
 └── README.md
