@@ -4,8 +4,8 @@ Launches the sbus_joy_node with configurable parameters.
 
 Usage:
   ros2 launch sbus_joy sbus_joy.launch.py
-  ros2 launch sbus_joy sbus_joy.launch.py serial_port:=/dev/ttyACM0
-  ros2 launch sbus_joy sbus_joy.launch.py publish_rate_hz:=100
+  ros2 launch sbus_joy sbus_joy.launch.py serial_port:=/dev/ttyUSB0
+  ros2 launch sbus_joy sbus_joy.launch.py publish_rate_hz:=50
 """
 
 from launch import LaunchDescription
@@ -18,7 +18,7 @@ def generate_launch_description():
     # Declare launch arguments with defaults
     serial_port_arg = DeclareLaunchArgument(
         'serial_port',
-        default_value='/dev/ttyACM1',
+        default_value='/dev/ttyUSB0',
         description='SBUS receiver serial port device path'
     )
 

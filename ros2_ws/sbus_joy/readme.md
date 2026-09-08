@@ -24,14 +24,14 @@ source /opt/ros/humble/setup.bash
 source ros2_ws/install/setup.bash
 export ROS_LOG_DIR=/root/.ros/log
 
-ros2 run sbus_joy sbus_joy_node --ros-args -p serial_port:=/dev/ttyACM1
+ros2 run sbus_joy sbus_joy_node --ros-args -p serial_port:=/dev/ttyUSB0
 ```
 
 ### 参数
 
 | 参数名 | 默认值 | 说明 |
 |--------|--------|------|
-| `serial_port` | `/dev/ttyACM1` | 串口设备路径 |
+| `serial_port` | `/dev/ttyUSB0` | 串口设备路径 |
 | `publish_rate_hz` | `50` | 发布频率 (Hz) |
 
 ## 验证数据

@@ -3,14 +3,16 @@
  * ROS2 节点：读取 SBUS 遥控器数据，发布 sensor_msgs/Joy 消息到 /joy 话题
  *
  * 通道映射：
- *   axes[0-10]  = CH1-CH11，摇杆/拨杆，归一化到 [-1.0, 1.0]
- *   buttons[0-4] = CH12-CH16，按键，按下=1，未按下=0
+ *   axes[0-9]   = CH1-CH4, CH6-CH11，摇杆/拨杆，归一化到 [-1.0, 1.0]
+ *   buttons[0]  = CH5，6档开关，值为 1-6
+ *   buttons[1-5] = CH12-CH16，按键，按下=1，未按下=0
  */
 
 #include <chrono>
 #include <functional>
 #include <memory>
 #include <string>
+#include <utility>
 #include <cerrno>
 #include <cstring>
 #include <fcntl.h>
@@ -23,14 +25,23 @@
 using namespace std::chrono_literals;
 
 // SBUS 通道值范围（用于归一化）
-static constexpr float SBUS_MIN    = 200.0f;
-static constexpr float SBUS_MAX    = 1800.0f;
+static constexpr float SBUS_MIN    = 280.0f;
+static constexpr float SBUS_MAX    = 1720.0f;
 static constexpr float SBUS_CENTER = 1000.0f;
-static constexpr float SBUS_RANGE  = 1000.0f;   // (SBUS_MAX - SBUS_MIN) / 2
+static constexpr float SBUS_RANGE  = 720.0f;   // (SBUS_MAX - SBUS_MIN) / 2
 
-// 通道分配：CH1-CH11 → axes，CH12-CH16 → buttons
-static constexpr int AXE_COUNT    = 11;   // 摇杆/拨杆通道数
-static constexpr int BUTTON_COUNT = 5;    // 按键通道数
+// 通道分配
+// axes: CH1-CH4(0-3), CH6-CH11(5-10) → axes[0-9]
+// buttons[0]: CH5 (6-position switch, value 1-6)
+// buttons[1-5]: CH12-CH16 (on/off buttons)
+static constexpr int AXE_COUNT    = 10;   // 摇杆/拨杆通道数
+static constexpr int BUTTON_COUNT = 6;    // 按键总数 (1个6档开关 + 5个普通按键)
+
+// CH5 六档开关阈值（SBUS原始值）
+// 档位:  200   680   840   1160  1240  1800
+// 对应:   1     2     3     4     5     6
+static constexpr int CH5_THRESHOLDS[] = {440, 760, 1000, 1200, 1520};
+static constexpr int CH5_INDEX = 4;  // CH5 在 channels[] 中的索引 (0-based)
 
 class SbusJoyNode : public rclcpp::Node
 {
@@ -38,7 +49,7 @@ public:
     SbusJoyNode() : Node("sbus_joy_node")
     {
         // 声明参数
-        this->declare_parameter<std::string>("serial_port", "/dev/ttyACM1");
+        this->declare_parameter<std::string>("serial_port", "/dev/ttyUSB0");
         this->declare_parameter<int>("publish_rate_hz", 50);
 
         serial_port_ = this->get_parameter("serial_port").as_string();
@@ -108,20 +119,37 @@ private:
         joy_msg.header.stamp = this->now();
         joy_msg.header.frame_id = "sbus_controller";
 
-        // CH1-CH11 映射到 axes，归一化到 [-1.0, 1.0]
+        // CH1-CH4, CH6-CH11 映射到 axes[0-9]，归一化到 [-1.0, 1.0]
         joy_msg.axes.resize(AXE_COUNT);
-        for (int i = 0; i < AXE_COUNT; i++) {
-            float normalized = (static_cast<float>(sbus_data_.channels[i]) - SBUS_CENTER) / SBUS_RANGE;
+        int axe_idx = 0;
+        for (int ch = 0; ch < 16; ch++) {
+            if (ch == CH5_INDEX) continue;  // 跳过 CH5
+            if (ch >= 11 && ch <= 15) continue;  // CH12-CH16 是按键
+            float normalized = (static_cast<float>(sbus_data_.channels[ch]) - SBUS_CENTER) / SBUS_RANGE;
             if (normalized >  1.0f) normalized =  1.0f;
             if (normalized < -1.0f) normalized = -1.0f;
-            joy_msg.axes[i] = normalized;
+            joy_msg.axes[axe_idx++] = normalized;
         }
+        // 交换 CH1 和 CH2：CH1→axes[1], CH2→axes[0]
+        std::swap(joy_msg.axes[0], joy_msg.axes[1]);
+        // axes[0] 反向（CH2 右摇杆）
+        joy_msg.axes[0] = -joy_msg.axes[0] + 0.0f;
 
-        // CH12-CH16 映射到 buttons，阈值判断：归一化值 > 0 → 按下(1)，否则 → 未按下(0)
+        // buttons[0] = CH5 六档开关，值 1-6
         joy_msg.buttons.resize(BUTTON_COUNT);
-        for (int i = 0; i < BUTTON_COUNT; i++) {
-            float normalized = (static_cast<float>(sbus_data_.channels[AXE_COUNT + i]) - SBUS_CENTER) / SBUS_RANGE;
-            joy_msg.buttons[i] = (normalized > 0.0f) ? 1 : 0;
+        uint16_t ch5_val = sbus_data_.channels[CH5_INDEX];
+        int gear = 6;  // default
+        for (int t = 0; t < 5; t++) {
+            if (ch5_val < CH5_THRESHOLDS[t]) {
+                gear = t + 1;
+                break;
+            }
+        }
+        joy_msg.buttons[0] = gear;
+
+        // buttons[1-5] = CH12-CH16，阈值判断：> 1000 → 1，否则 → 0
+        for (int i = 0; i < 5; i++) {
+            joy_msg.buttons[i + 1] = (sbus_data_.channels[11 + i] > static_cast<uint16_t>(SBUS_CENTER)) ? 1 : 0;
         }
 
         joy_pub_->publish(joy_msg);
