@@ -13,12 +13,19 @@ Controller/
 ├── ros2_ws/
 │   └── sbus_joy/              # ROS2 功能包
 │       ├── include/
-│       │   └── sbus_serial.hpp    # SBUS 协议 C++ 头文件
+│       │   ├── sbus_serial.hpp    # SBUS 协议 C++ 头文件
+│       │   └── joy_controller.hpp # 遥控器控制器接口
 │       ├── launch/
 │       │   └── sbus_joy.launch.py # ROS2 launch 启动文件
+│       ├── service/
+│       │   ├── sbus_joy.service   # systemd 服务文件
+│       │   ├── install_autostart.sh   # 安装自启动脚本
+│       │   └── uninstall_autostart.sh # 卸载自启动脚本
 │       ├── src/
-│       │   ├── sbus_serial.cpp    # SBUS 串口配置与帧解析
-│       │   └── sbus_joy_node.cpp  # ROS2 节点主程序
+│       │   ├── sbus_serial.cpp        # SBUS 串口配置与帧解析
+│       │   ├── sbus_joy_node.cpp      # ROS2 节点主程序
+│       │   ├── joy_controller.cpp     # 遥控器控制器实现
+│       │   └── test_joy_controller.cpp # 独立测试程序
 │       ├── CMakeLists.txt
 │       └── package.xml
 └── README.md
@@ -187,6 +194,68 @@ ros2 topic hz /joy
 ```bash
 ros2 node info /sbus_joy_node
 ros2 param list /sbus_joy_node
+```
+
+---
+
+## 开机自启动
+
+使用 systemd service 实现开机自动启动 sbus_joy 节点。
+
+### 安装自启动
+
+```bash
+# 进入 service 目录
+cd ~/ros2_ws/sbus_joy/service
+
+# 一键安装（需要 sudo 权限）
+sudo bash install_autostart.sh
+```
+
+安装完成后，系统启动时会自动运行 sbus_joy 节点。
+
+### 卸载自启动
+
+```bash
+cd ~/ros2_ws/sbus_joy/service
+sudo bash uninstall_autostart.sh
+```
+
+### 手动管理服务
+
+```bash
+# 查看服务状态
+systemctl status sbus_joy
+
+# 启动服务
+sudo systemctl start sbus_joy
+
+# 停止服务
+sudo systemctl stop sbus_joy
+
+# 重启服务
+sudo systemctl restart sbus_joy
+
+# 查看实时日志
+journalctl -u sbus_joy -f
+```
+
+### 修改自启动参数
+
+编辑 `/etc/systemd/system/sbus_joy.service` 文件，修改 `ExecStart` 行：
+
+```bash
+# 修改串口
+ExecStart=/bin/bash -c '... ros2 launch sbus_joy sbus_joy.launch.py serial_port:=/dev/ttyACM0 ...'
+
+# 修改发布频率
+ExecStart=/bin/bash -c '... ros2 launch sbus_joy sbus_joy.launch.py publish_rate_hz:=100 ...'
+```
+
+修改后执行：
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart sbus_joy
 ```
 
 ---

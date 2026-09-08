@@ -1,0 +1,34 @@
+[Unit]
+Description=SBUS Joy Controller ROS2 Node
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+
+# 环境变量
+Environment=ROS_LOG_DIR=/root/.ros/log
+Environment=ROS_DOMAIN_ID=0
+
+# 工作目录
+WorkingDirectory=/root
+
+# 启动命令
+ExecStart=/bin/bash -c '\
+    source /opt/ros/humble/setup.bash && \
+    source /root/ros2_ws/install/setup.bash && \
+    ros2 launch sbus_joy sbus_joy.launch.py serial_port:=/dev/ttyUSB0 publish_rate_hz:=50'
+
+# 重启策略
+Restart=on-failure
+RestartSec=5
+
+# 日志
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=sbus_joy
+
+[Install]
+WantedBy=multi-user.target
